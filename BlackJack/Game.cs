@@ -6,11 +6,12 @@
     /// <param name="cardRenderer"></param>
     /// <param name="deck"></param>
     /// <param name="deckTotaller"></param>
-    public class Game(ICardRenderer cardRenderer, IDeck deck, IDeckTotaller deckTotaller) : IGame
+    public class Game(ICardRenderer cardRenderer, IDeck deck, IDeckTotaller deckTotaller, IUiHandler uiHandler) : IGame
     {
         private ICardRenderer _cardRenderer = cardRenderer;
         private IDeck _deck = deck;
         private IDeckTotaller _deckTotaller = deckTotaller;
+        private IUiHandler _uiHandler = uiHandler;
         public List<Card> PlayerHand { get; set; } = new List<Card>();
         public List<Card> DealerHand { get; set; } = new List<Card>();
         public GameState State { get; set; }
@@ -19,44 +20,56 @@
 
         public void NewGame()
         {
+            InitializeDeck();
+            DealInitialCards();
+            PlayerPlays();     
+            DealerPlays();
+        }
+
+        private void InitializeDeck()
+        {
             PlayerHand = new List<Card>();
             DealerHand = new List<Card>();
             State = GameState.InProgress;
 
             _deck.InitializeDeck();
             _deck.Shuffle();
+        }
 
-            // Play one card each to player and dealer to start the game
+        private void DealInitialCards()
+        {
+            // Deal two cards to player and dealer
             PlayerHand.Add(_deck.Deal());
             DealerHand.Add(_deck.Deal());
-
-            // Play one more card each to player and dealer to start the game
             PlayerHand.Add(_deck.Deal());
             DealerHand.Add(_deck.Deal());
+        }
 
+        public void PlayerPlays()
+        {
             //enter into a loop to allow the player to hit or stand until they bust or stand.
             while (State != GameState.PlayerFinished && _deckTotaller.TotalScore(PlayerHand) <= 21)
             {
                 _cardRenderer.RenderHand(PlayerHand);
-                Console.WriteLine($"Your current hand:{_deckTotaller.TotalScore(PlayerHand)}");
+                _uiHandler.WriteMessage($"Your current hand:{_deckTotaller.TotalScore(PlayerHand)}");
 
                 //we want to render out only the dealers first card, so 
                 //we need a new list of cards, to add just the first card to.
 
-                Console.WriteLine($"Dealers Card");
+                  _uiHandler.WriteMessage($"Dealers Card");
                 List<Card> dealerCard = new List<Card>();
                 dealerCard.Add(DealerHand.First());
                 _cardRenderer.RenderHand(dealerCard);
 
                 if (_deckTotaller.TotalScore(PlayerHand) == 21)
                 {
-                    Console.WriteLine("Blackjack! You win!");
+                      _uiHandler.WriteMessage("Blackjack! You win!");
                     State = GameState.PlayerWon;
                     PlayerWins += 1;
                     return;
                 }
-                Console.WriteLine("Do you want to hit or stand? (h/s)");
-                string? choice = Console.ReadLine()?.ToLower();
+                  _uiHandler.WriteMessage("Do you want to hit or stand? (h/s)");
+                string? choice = _uiHandler.ReadInput()?.ToLower();
 
                 if (choice != null)
                 {
@@ -76,13 +89,11 @@
             if (_deckTotaller.TotalScore(PlayerHand) > 21)
             {
                 _cardRenderer.RenderHand(PlayerHand);
-                Console.WriteLine("You bust! Dealer wins!");
+                _uiHandler.WriteMessage("You bust! Dealer wins!");
                 State = GameState.DealerWon;
                 DealerWins += 1;
                 return;
             }
-            DealerPlays();
-
         }
 
         public void PlayGame()
@@ -90,17 +101,17 @@
             do
             {
                 NewGame();
-                Console.WriteLine("Do you want to play again Y/N");
+                _uiHandler.WriteMessage("Do you want to play again Y/N");
             }
-            while (Console.ReadLine()?.Trim().ToLower() == "y");
+            while (_uiHandler.ReadInput()?.Trim().ToLower() == "y");
 
-            Console.WriteLine("Thanks for playing!");
+              _uiHandler.WriteMessage("Thanks for playing!");
         }
 
         public void DealerPlays()
         {
 
-            Console.WriteLine("Dealers turn");
+              _uiHandler.WriteMessage("Dealers turn");
 
             decimal dealerScore = _deckTotaller.TotalScore(DealerHand);
 
@@ -113,7 +124,7 @@
 
             if (dealerScore > 21)
             {
-                Console.WriteLine("Dealer busts! You win!");
+                  _uiHandler.WriteMessage("Dealer busts! You win!");
                 State = GameState.PlayerWon;
                 PlayerWins += 1;
             }
@@ -121,24 +132,24 @@
             {
                 if (dealerScore > _deckTotaller.TotalScore(PlayerHand))
                 {
-                    Console.WriteLine($"Dealer wins!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
+                      _uiHandler.WriteMessage($"Dealer wins!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
                     State = GameState.DealerWon;
                     DealerWins += 1; // Increment dealer score to avoid confusion in output, not necessary for logic
                 }
                 else if (dealerScore < _deckTotaller.TotalScore(PlayerHand))
                 {
-                    Console.WriteLine($"You win!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
+                      _uiHandler.WriteMessage($"You win!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
                     State = GameState.PlayerWon;
                     PlayerWins += 1;
                 }
                 else
                 {
-                    Console.WriteLine($"Its a Draw!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
+                      _uiHandler.WriteMessage($"Its a Draw!: {dealerScore} vs {_deckTotaller.TotalScore(PlayerHand)} ");
                     State = GameState.Draw;
                 }
             }
 
-            Console.WriteLine($"Player Wins:{PlayerWins} - Dealer Wins:{DealerWins}");
+            _uiHandler.WriteMessage($"Player Wins:{PlayerWins} - Dealer Wins:{DealerWins}");
 
         }
 

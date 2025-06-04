@@ -15,12 +15,18 @@ namespace BlackJack
         {
             RenderHand(new List<Card> { card });
         }
+		IUiHandler _uiHandler;
 
-        /// <summary>
-        /// Render the complete hand of cards.
-        /// </summary>
-        /// <param name="hand"></param>
-        public void RenderHand(List<Card> hand)
+		public CardRenderer(IUiHandler uiHandler)
+		{
+			_uiHandler = uiHandler;
+		}
+
+		/// <summary>
+		/// Render the complete hand of cards.
+		/// </summary>
+		/// <param name="hand"></param>
+		public void RenderHand(List<Card> hand)
         {
             if (hand == null || hand.Count == 0)
                 return;
@@ -88,26 +94,26 @@ namespace BlackJack
                         if (suitIndex == -1) suitIndex = line.IndexOf('♠');
                         if (suitIndex != -1)
                         {
-                            // Write before suit
-                            Console.Write(line.Substring(0, suitIndex));
+							// Write before suit
+							_uiHandler.WriteMessage(line.Substring(0, suitIndex));
                             // Set color and write suit
                             Console.ForegroundColor = suitColors[j];
-                            Console.Write(line[suitIndex]);
+							_uiHandler.WriteMessage(line[suitIndex].ToString());
                             Console.ResetColor();
-                            // Write after suit
-                            Console.Write(line.Substring(suitIndex + 1) + " ");
+							// Write after suit
+							_uiHandler.WriteMessage(line.Substring(suitIndex + 1) + " ");
                         }
                         else
                         {
-                            Console.Write(line + " ");
+							_uiHandler.WriteMessage(line + " ");
                         }
                     }
                     else
                     {
-                        Console.Write(cardLines[j][i] + " ");
+                        _uiHandler.WriteMessage(cardLines[j][i] + " ");
                     }
                 }
-                Console.WriteLine();
+     
             }
         }
     }
