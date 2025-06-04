@@ -22,14 +22,12 @@ BlackJack/
 
 1. Clone this repository:
 
-   ```bash
+bash
    git clone https://github.com/glyn1981/BlackJack.git
 Open the solution in Visual Studio or run from the terminal:
-```
 
-```
 dotnet run --project BlackJack
-```
+
 Follow the on-screen prompts to:
 
 Draw a card (Hit)
