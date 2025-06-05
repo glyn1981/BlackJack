@@ -4,5 +4,9 @@
     {
         string ReadInput();
         void WriteMessage(string message);
+
+        void WriteLine();
+
+        void Write(string message);
     }
 }
